@@ -1,0 +1,118 @@
+<!-- Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT License. -->
+<!-- This file shows how to design a first-run page that provides a welcome screen to the user about the features of the add-in. -->
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <title>Analizador TURET</title>
+
+    <!-- Office JavaScript API -->
+    <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1.1/hosted/office.js"></script>
+
+    <!-- For more information on Office UI Fabric, visit https://developer.microsoft.com/fabric. -->
+    <link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/9.6.1/css/fabric.min.css" />
+
+    <!-- Template styles -->
+    <link href="taskpane.css" rel="stylesheet" type="text/css" />
+
+
+    <script src="https://code.jquery.com/jquery-3.2.1.js" integrity="sha256-DZAnKJ/6XZ9si04Hgrsxu/8s717jcIzLy3oi35EouyE=" crossorigin="anonymous">
+    </script>
+    <script type="text/javascript">
+        function AnalizadorTURET() {
+            Word.run(function(context) {
+
+                    function consultaServidor(texto) {
+                        //var server = "http://127.0.0.1:5000"; //http://turetprueba1.azurewebsites.net/
+                        var server = "https://turetapi.azurewebsites.net/";
+                        var appdir = '/analizar';
+                        var send_msg = "<p>Enviando texto</p>";
+                        var received_msg = "<p>Resultado retornado</p>";
+                        var vTexto = {
+                            'textoA': ''
+                        };
+                        vTexto['textoA'] = [texto];
+                        if (texto == "") {
+                            $('#resultado').html("No has seleccionado texto.");
+                        } else {
+                            $('#resultado').html(send_msg + texto);
+                        }
+
+
+                        $.ajax({
+                            type: "POST",
+                            url: server + appdir,
+                            data: JSON.stringify(vTexto),
+                            contentType: "application/x-www-form-urlencoded;charset=utf-8",
+                            dataType: 'json'
+                        }).done(function(data) {
+                            console.log(data);
+                            $('#txtResultado').val(data['textoA']);
+                            $('#resultado').html(received_msg + data['msg']);
+                            $('#txtsec').html("<div class='container'><h3>Resultado del analisis</h3><br><h6><b>Sección evaluada:</b> " + data['seccion'] + "</div>")
+                            $('#txtsof').html("<div class='container' style='background-color: lightgray'><h4>Sofisticación</h4><br><h6><b>Calificación:</b> " + data['cal_sof'] + "<br><br><b>Nota: </b>" + data['nota_sof'] + "</div>");
+                            $('#txtvar').html("<div class='container' style='background-color: lightgray'><h4>Variedad</h4><br><h6><b>Calificación:</b> " + data['cal_var'] + "<br><br><b>Nota: </b>" + data['nota_var'] + "</div>");
+                            $('#txtden').html("<div class='container' style='background-color: lightgray'><h4>Densidad</h4><br><h6><b>Calificación:</b> " + data['cal_den'] + "<br><br><b>Nota: </b>" + data['nota_den'] + "</div>");
+                        });
+                    }
+                    var range = context.document.getSelection();
+                    context.load(range, 'text');
+                    return context.sync()
+                        .then(function() {
+                            var palabras = range.text;
+                            consultaServidor(palabras);
+
+                        })
+                        .then(context.sync);
+                })
+                .catch(errorHandler);
+        }
+    </script>
+</head>
+
+<body class="ms-font-m ms-welcome ms-Fabric">
+    <section id="sideload-msg" class="ms-welcome__main">
+    </section>
+    <div class="container">
+        <main id="app-body" class="ms-welcome__main" style="display: none;">
+            <div class="container">
+
+                <h2><b>Analizador de tesis</b>.</h2>
+                <p>Selecciona el texto y luego da clic en el boton de analizar. No olvides seleccionar tambien el titulo de la sección a analizar (Introducción, Objetivos, Planteamiento,etc.)
+                </p>
+                <br>
+                <center><button onclick="AnalizadorTURET()">Analizar</button><br><br>
+                </center>
+                <center>
+                    <h6 id="txtsec"></h6>
+                </center>
+                <center><br>
+                    <h6 id="txtsof"></h6>
+                    <br><br>
+                </center>
+                <center><br>
+                    <h6 id="txtvar"></h6>
+                    <br><br>
+                </center>
+
+                <center><br>
+                    <h6 id="txtden"></h6>
+                    <br><br>
+                </center>
+
+                <center><br>
+                    <h6 id="txtTexto"></h6>
+                    <br><br>
+                </center>
+            </div>
+        </main>
+    </div>
+</body>
+
+</html
